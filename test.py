@@ -19,8 +19,14 @@ import json
 #     }
 # )
 # data = json.loads(match.text)
-with open('./player_2021.json', 'r') as f:
+with open('./season.json', 'r') as f:
     data = json.load(f)
 
-print(len(data))
+new = {ele['id']:ele['label'] for ele in data}
+
+with open('./seasonid.json', 'w') as f:
+    json.dump(new, f)
+
+
+# print(len(data))
 
