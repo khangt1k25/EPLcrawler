@@ -1,3 +1,6 @@
+
+
+
 # MARK:- libs
 
 from scrapy.spiders import CrawlSpider
@@ -36,14 +39,15 @@ seasonids = {
     "1": "1992/93"
 }
 
-base_url = 'https://footballapi.pulselive.com/football/teams?pageSize=25&altIds=true&compSeasons=363'
+## Please change 363 = id season
 
-club_url = 'https://footballapi.pulselive.com/football/teams/%i/compseasons/363/staff?compSeasons=363'
+base_url = 'https://footballapi.pulselive.com/football/teams?pageSize=25&altIds=true&compSeasons=363'
+clubstat_url = 'https://footballapi.pulselive.com/football/stats/team/%i?compSeasons=363'
 
 
 # Get player for each team
-class PlayerOfClubSpider(CrawlSpider):
-    name = 'playerofclub'
+class ClubStat(CrawlSpider):
+    name = 'clubstats'
     
     headers = {
         'origin': 'https://www.premierleague.com'
@@ -61,22 +65,15 @@ class PlayerOfClubSpider(CrawlSpider):
         jsonfile = response.json()
         for club in jsonfile['content']:
             clubid =  club['id']
-            cluburl = club_url%int(clubid)
+            cluburl = clubstat_url%int(clubid)
             yield scrapy.Request(
                 url=cluburl,
                 headers=self.headers,
                 callback=self.parse_item
             )
+
     def parse_item(self, response):
         jsonfile = response.json()
-        teamid = jsonfile['team']['club']['id']
-        teamname = jsonfile['team']['name']
-        playerId = []
-        Id = []
-        for player in jsonfile['players']:
-            playerId.append(player['playerId'])
-            Id.append(player['id'])
-        yield {'clubId': teamid, 'clubName': teamname, 'playerId': playerId, 'Id': Id}
-        
+        clubid  = jsonfile['entity']['id']
 
-
+        yield {'clubid': int(clubid), 'stats': jsonfile}

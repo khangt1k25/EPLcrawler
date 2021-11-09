@@ -34,3 +34,9 @@ scrapy crawl rank -o rank.json
 ```
 
 This script run only 1 time to crawl ranking tables of all seasons.
+
+4. Stats for club in specific seasons
+
+```
+scrapy crawl clubstats -o clubstats_2021.json
+```
