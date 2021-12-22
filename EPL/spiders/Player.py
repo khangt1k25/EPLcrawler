@@ -60,7 +60,7 @@ class PlayerOfClubSpider(CrawlSpider):
                 headers=self.headers,
                 callback=self.parse
             )
-
+    
     def parse(self, response):
         jsonfile = response.json()
         for club in jsonfile['content']:

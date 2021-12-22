@@ -41,9 +41,9 @@ seasonids = {
 
 ## Please change 363 = id season
 
-base_url = 'https://footballapi.pulselive.com/football/teams?pageSize=25&altIds=true&compSeasons=363'
-clubstat_url = 'https://footballapi.pulselive.com/football/stats/team/%i?compSeasons=363'
-
+base_url = 'https://footballapi.pulselive.com/football/teams?pageSize=25&altIds=true&compSeasons=%i'
+clubstat_url = 'https://footballapi.pulselive.com/football/stats/team/{}?compSeasons={}'
+ssids = list(seasonids.keys())
 
 # Get player for each team
 class ClubStat(CrawlSpider):
@@ -52,28 +52,31 @@ class ClubStat(CrawlSpider):
     headers = {
         'origin': 'https://www.premierleague.com'
     }
-    start_urls = [base_url]
+
+    start_urls = [base_url*int(i) for i in ssids]
     def start_requests(self):
-        for url in self.start_urls:
+        for ss in ssids:
             yield scrapy.Request(
-                url = url,
+                url = base_url%int(ss),
                 headers=self.headers,
-                callback=self.parse
+                callback=self.parse,
+                cb_kwargs={'ss':int(ss)}
             )
 
-    def parse(self, response):
+    def parse(self, response, ss):
         jsonfile = response.json()
         for club in jsonfile['content']:
             clubid =  club['id']
-            cluburl = clubstat_url%int(clubid)
+            cluburl = clubstat_url.format(int(clubid), ss)
             yield scrapy.Request(
                 url=cluburl,
                 headers=self.headers,
-                callback=self.parse_item
+                callback=self.parse_item,
+                cb_kwargs={'ss': ss}
             )
 
-    def parse_item(self, response):
+    def parse_item(self, response, ss):
         jsonfile = response.json()
         clubid  = jsonfile['entity']['id']
 
-        yield {'clubid': int(clubid), 'stats': jsonfile}
+        yield {'ss':int(ss), 'clubid': int(clubid), 'stats': jsonfile}
