@@ -39,11 +39,14 @@ seasonids = {
     "1": "1992/93"
 }
 
-base_url = 'https://footballapi.pulselive.com/football/teams?pageSize=25&altIds=true&compSeasons=418'
+base_url = 'https://footballapi.pulselive.com/football/teams?pageSize=25&altIds=true&compSeasons={}'
 
-club_url = 'https://footballapi.pulselive.com/football/teams/%i/compseasons/418/staff?compSeasons=418'
+club_url = 'https://footballapi.pulselive.com/football/teams/{}/compseasons/{}/staff?compSeasons={}'
 
-player_url = 'https://footballapi.pulselive.com/football/stats/player/%i?comps=1'
+player_url = 'https://footballapi.pulselive.com/football/stats/player/{}?comps=1'
+ssids = list(seasonids.keys())
+## change this 
+ssid = [ssids[0]]
 
 # Get player for each team
 class PlayerOfClubSpider(CrawlSpider):
@@ -52,43 +55,43 @@ class PlayerOfClubSpider(CrawlSpider):
     headers = {
         'origin': 'https://www.premierleague.com'
     }
-    start_urls = [base_url]
+    # start_urls = [base_url*int(i) for i in ssids]
     def start_requests(self):
-        for url in self.start_urls:
+        for ss in ssid:
             yield scrapy.Request(
-                url = url,
+                url = base_url.format(int(ss)),
                 headers=self.headers,
-                callback=self.parse
+                callback=self.parse,
+                cb_kwargs={'ss':int(ss)}
             )
     
-    def parse(self, response):
+    def parse(self, response, ss):
         jsonfile = response.json()
         for club in jsonfile['content']:
             clubid =  club['id']
-            cluburl = club_url%int(clubid)
             yield scrapy.Request(
-                url=cluburl,
+                url=club_url.format(int(clubid), int(ss), int(ss)),
                 headers=self.headers,
-                callback=self.parse_item
+                callback=self.parse_item,
+                cb_kwargs={'ss':int(ss), 'clubid':int(clubid)}
             )
-    def parse_item(self, response):
+    def parse_item(self, response, ss, clubid):
         jsonfile = response.json()
-        teamid = jsonfile['team']['club']['id']
-        # teamname = jsonfile['team']['name']
+
         for player in jsonfile['players']:
             yield scrapy.Request(
-                url=player_url%int(player['id']),
+                url=player_url.format(int(player['id'])),
                 headers=self.headers,
                 callback=self.parse_player,
-                cb_kwargs=dict(team=teamid)
+                cb_kwargs=dict({'ss':ss, 'clubid':clubid})
             )
 
 
-    def parse_player(self, response, team):
+    def parse_player(self, response, ss, clubid):
         jsonfile = response.json()
         
         id = jsonfile['entity']['id']
 
-        item = {'teamid': team, 'id':id, 'playerId': jsonfile['entity']['playerId'], 'info': jsonfile['entity'], 'stats': jsonfile['stats']}
+        item = {'id':id, "ss": ss, 'clubid': clubid, 'playerId': jsonfile['entity']['playerId'], 'info': jsonfile['entity'], 'stats': jsonfile['stats']}
         
         yield item
