@@ -1,9 +1,9 @@
 
-# Crawler EPL data
+# EPL project
 
 
 
-## Getting started
+## Getting started with scrapy crawler 
 * Requiremnts:
   * Python
   * Scrapy
@@ -40,3 +40,7 @@ This script run only 1 time to crawl ranking tables of all seasons.
 ```
 scrapy crawl clubstats -o clubstats_2021.json
 ```
+
+
+## Analysis report 
+[Report](./asset/DS4EPL.pdf)
